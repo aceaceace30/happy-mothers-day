@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="icon" href="correct_card.jpg">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Find Happy Anj!</title>
+
+    <style type="text/css">
+      img {
+        width: 100%;
+        object-fit: cover;
+        height: 100%;
+      }
+    </style>
+
+  </head>
+  <body>
+    <div class="container">
+
+      <div class="row pt-2">
+        <div class="col text-center">
+          <h1 class="text-danger">Find the Mother</h1>
+          <h4>Happy Mother's Day Mama!</h4>
+        </div>
+      </div>
+
+      <div class="row pt-3">
+        <div class="col text-center">
+          <h3>Win Streak: 
+            <span id="win_streak_count" class="text-success font-weight-bold"></span>
+          </h3>
+        </div>
+      </div>
+
+      <div class="row pt-3">
+        <div class="col">
+          <button class="btn btn-success btn-block btn-lg" id="startBtn" onclick="playAudio()">Start Game</button>
+        </div>
+      </div>
+
+      <div class="row pt-5" id="card_group" allow-click="no">
+        <div class="col">
+          <img src="correct_card.jpg" class="cards correct">
+        </div>
+        <div class="col">
+          <img src="wrong_card.jpg" class="cards wrong">
+        </div>
+        <div class="col">
+          <img src="wrong_card.jpg" class="cards wrong">
+        </div>
+        <div class="col">
+          <img src="wrong_card.jpg" class="cards wrong">
+        </div>
+
+        <div class="col-12 text-center pt-3">
+          <h3 class="font-weight-bold" id="message"></h3>
+        </div>
+      </div>
+      
+    </div>
+    <audio id="audio" src="bg_music.mp3"></audio>
+
+    <script type="text/javascript">
+
+      var audio = document.getElementById("audio");
+
+      function playAudio() {
+        audio.currentTime = 0;
+        audio.play();
+      }
+
+      // helper functions
+
+      function between(min, max) {  
+        return Math.floor(
+          Math.random() * (max - min + 1) + min
+        )
+      }
+
+      let images = document.getElementsByClassName('cards');
+      let images_array = Array.from(images);
+
+      let cardGroup = document.getElementById('card_group');
+      let message = document.getElementById('message');
+
+      let winStreak = document.getElementById('win_streak_count');
+      winStreak.innerHTML = 0
+
+      let location_path = location.pathname.split('/')[0];
+
+      let correct_card_path = 'correct_card.jpg';
+      let wrong_card_path = 'wrong_card.jpg';
+      let back_card_path = 'back_card.jpg';
+
+      images_array.forEach((image, index) => { image.addEventListener('click', imageClick) });
+
+      // checks if the image is correct
+      function imageClick(e) {
+
+        if (cardGroup.getAttribute('allow-click') === 'no') {
+          return true;
+        }
+
+
+        if (e.target.className === 'cards correct') {
+          // used to flip cards
+          flipCards();
+          alert('You are correct.');
+          message.innerHTML = 'You are correct.';
+          message.className = 'font-weight-bold text-success';
+          winStreak.innerHTML = Number(winStreak.innerHTML) + 1;
+        }
+        else {
+          // used to flip cards
+          flipCards();
+          alert ('You are wrong.');
+          message.innerHTML = 'You are wrong.';
+          message.className = 'font-weight-bold text-danger';
+
+          if (Number(winStreak.innerHTML) > 0){
+              alert(`Your score is ${winStreak.innerHTML}. :)`);
+              winStreak.innerHTML = 0;
+          }
+        } 
+      }
+      //
+
+      function getIndexOfCorrectImg() {
+        for (let i = 0; i < images_array.length; i++) {
+          if(images_array[i].className == 'cards correct') {
+            return i;
+          }
+        }
+      }
+
+    
+      function shuffleCards() {
+
+        let chosen_numbers = [0, 1, 2, 3];
+
+        let random_number = between(0, 3);
+
+        let indexOfCorrectImg = getIndexOfCorrectImg();
+
+        while(random_number === indexOfCorrectImg){
+          random_number = between(0, 3);
+        }
+
+
+        images[random_number].src = images[indexOfCorrectImg].src
+        images_array[random_number].className = 'cards correct';
+
+        chosen_numbers = chosen_numbers.filter((item) => item !== random_number)
+
+
+        for (let i = 0; i <= 2; i++) {
+          images[chosen_numbers[i]].src = wrong_card_path;
+          images_array[chosen_numbers[i]].className = 'cards wrong';
+        }
+      }
+
+      function flipCards(flipAllToBack=false){
+
+        if (flipAllToBack === false)
+        {
+          images_array.forEach((image, index) => { 
+            if (image.className == 'cards wrong') {
+              image.src = wrong_card_path;
+            }
+            else {
+              image.src = correct_card_path;
+            }
+          });
+
+          cardGroup.setAttribute('allow-click', 'no');
+          startBtn.disabled = false;
+
+        } else {
+          images_array.forEach((image, index) => { image.src = back_card_path });
+          cardGroup.setAttribute('allow-click', 'yes');
+          message.innerHTML = 'Please choose a card.';
+
+        }
+
+      }
+
+      function startGame(){
+
+        message.innerHTML = '';
+        message.className = 'font-weight-bold';
+        startBtn.disabled = true;
+        alert('Game has started.');
+        let timerId = setInterval(shuffleCards, 150);
+
+        // after 5 seconds stop
+        setTimeout(() => { clearInterval(timerId); flipCards(flipToBack=true); audio.pause(); }, 4000);
+      }
+
+      let startBtn = document.getElementById('startBtn');
+      startBtn.addEventListener('click', startGame);
+      
+    </script>
+    
+  </body>
+</html>
