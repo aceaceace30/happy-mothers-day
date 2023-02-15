@@ -1,2 +1,2 @@
 # happy-mothers-day
-A simple fun game for my mom.
+A simple game for my mom.
